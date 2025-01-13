@@ -24,6 +24,14 @@ delimiter = "/"
 face_locations = [] # 顔の位置情報を格納する変数
 video_capture = cv2.VideoCapture(0)
 
+
+for image_path in image_paths:
+    im_name = image_path.split(delimiter)[-1].split('.')[0]
+    image = face_recognition.load_image_file(image_path)
+    face_encoding = face_recognition.face_encodings(image)[0]
+    known_face_encodings.append(face_encoding)
+    known_face_names.append(im_name)
+
 def main():
   # 処理フラグの初期化
   process_this_freme = True
@@ -32,24 +40,21 @@ def main():
     # ビデオの単一フレームを取得
     _, frame = video_capture.read()
 
-    for image_path in image_paths:
-        im_name = image_path.split(delimiter)[-1].split('.')[0]
-        image = face_recognition.load_image_file(image_path)
-        face_encoding = face_recognition.face_encodings(image)[0]
-        known_face_encodings.append(face_encoding)
-        known_face_names.append(im_name)
-
     # 時間を節約するためにフレーム毎の処理をスキップ
     if process_this_freme:
         # 画像を縦1/4 横1/4に圧縮
         small_frame = cv2.resize(frame, (0,0), fx=0.25, fy=0.25)
-
 
         # 顔の位置情報を検索
         face_locations = face_recognition.face_locations(small_frame)
 
         # 顔画像の符号化
         face_encodings = face_recognition.face_encodings(small_frame, face_locations)
+
+        # 名前配列の初期化
+        face_names = []
+
+
         for face_encoding in face_encodings:
             # 顔画像が登録画像と一致しているかを検証
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding, threshold) 
@@ -61,11 +66,14 @@ def main():
             if matches[best_match_index]:
                 name = known_face_names[best_match_index]
 
+            face_names.append(name)
+
+
     # 処理フラグの切り替え
     process_this_freme = not process_this_freme
 
     # 顔の位置情報を表示させる
-    for (top, right, bottom, left) in face_locations:
+    for (top, right, bottom, left), name in zip(face_locations, face_names):
       # 圧縮した画像の座標を復元
       top *= 4
       right *= 4
