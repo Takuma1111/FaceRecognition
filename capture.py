@@ -7,6 +7,8 @@ import numpy as np
 import glob
 from PIL import ImageFont, ImageDraw, Image
 threshold = config.threshold
+emp_info = config.emp_info
+mode = config.mode
 
 # 顔情報の初期化
 face_locations = []
@@ -51,6 +53,10 @@ def main():
       if matches[best_match_index]:
         name = known_face_names[best_match_index]
 
+      # 本人確認
+      if mode == 1 and name != "Unknowm": # パスワードがあっているかつ登録画像と顔が一致しているのなら次の関数を実行する
+       check_password(name)
+
     # 顔の位置情報を表示させる
     for (top, right, bottom, left) in face_locations:
       # 顔領域に枠を付けていく
@@ -66,6 +72,17 @@ def main():
     # ESCキーで終了
     if cv2.waitKey(1) == 27:
       break
+
+def check_password(name):
+    if name in checked_face:
+      return
+    
+    emp_pw = input(name + "さんのパスワードを入力してください。")
+    if emp_info[name] == emp_pw:
+        print("出勤しました")
+        checked_face.append(name)
+    else:
+       print("パスワードが不正です")
 
 main()
 
